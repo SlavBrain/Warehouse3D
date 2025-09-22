@@ -1,89 +1,153 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Product');
-const Category = require('../models/Category');
+const ProductModel = require('../models/Product');
+const CategoryModel = require('../models/Category');
 
-// 🔍 Поиск товаров по названию
-router.get('/search', async (req, res) => {
-  try {
-    const { q } = req.query;
-    if (!q || q.trim() === '') {
-      return res.status(400).json({ error: 'Параметр q обязателен' });
-    }
-
-    const regex = new RegExp(q, 'i');
-    const products = await Product.find({ name: regex }).limit(10);
-    res.json(products);
-  } catch (err) {
-    console.error('Ошибка поиска:', err);
-    res.status(500).json({ error: 'Ошибка при поиске товара' });
-  }
-});
-
-// 📦 Получить все товары
+// 🔹 Получить все товары
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await ProductModel.find();
     res.json(products);
-  } catch (err) {
-    console.error('Ошибка получения списка товаров:', err);
-    res.status(500).json({ error: 'Ошибка при получении списка товаров' });
+  } catch (error) {
+    console.error('Ошибка при получении товаров:', error);
+    res.status(500).json({ error: 'Ошибка при получении товаров' });
   }
 });
 
-// ➕ Добавить товар с поддержкой customFields и объединения
+// 🔹 Получить товар по ID
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await ProductModel.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error('Ошибка при получении товара:', error);
+    res.status(500).json({ error: 'Ошибка при получении товара' });
+  }
+});
+
+// 🔹 Добавить товар или закупку
 router.post('/', async (req, res) => {
   try {
-    const { name, category, quantity, purchasePrice, seller, customFields } = req.body;
-    const product = new Product({ name, category, quantity, purchasePrice, seller, customFields});
+    const {
+      name,
+      category,
+      quantity,
+      purchasePrice,
+      seller,
+      customFields,
+      linkTo
+    } = req.body;
 
-    const categoryDoc = await Category.findById(category);
+    // Ручная привязка к существующему товару
+    if (linkTo) {
+      const targetProduct = await ProductModel.findById(linkTo);
+      if (!targetProduct) {
+        return res.status(404).json({ error: 'Товар для привязки не найден' });
+      }
+
+      targetProduct.purchases.push({
+        seller,
+        purchasePrice,
+        purchaseDate: new Date()
+      });
+
+      targetProduct.quantity += quantity;
+
+      if (customFields && typeof customFields === 'object') {
+        targetProduct.customFields = {
+          ...targetProduct.customFields,
+          ...customFields
+        };
+      }
+
+      const updated = await targetProduct.save();
+      return res.status(200).json(updated);
+    }
+
+    // Получаем категорию
+    const categoryDoc = await CategoryModel.findById(category);
     if (!categoryDoc) {
       return res.status(400).json({ error: 'Категория не найдена' });
     }
 
+    // Проверка на объединение
+    let existingProduct = null;
     if (categoryDoc.mergeable) {
-      const existing = await Product.findOne({ name, category });
-
-      if (existing) {
-        const totalQty = existing.quantity + quantity;
-        const avgPrice = ((existing.purchasePrice * existing.quantity) + (purchasePrice * quantity)) / totalQty;
-
-        existing.quantity = totalQty;
-        existing.purchasePrice = avgPrice;
-        existing.customFields = customFields; // обновляем поля
-        await existing.save();
-
-        return res.json({ message: 'Товар объединён', product: existing });
-      }
+      existingProduct = await ProductModel.findOne({ name, category });
     }
 
-    const saved = await product.save();
-    res.status(201).json(saved);
-  } catch (err) {
-    console.error('Ошибка добавления товара:', err);
+    if (existingProduct) {
+      existingProduct.purchases.push({
+        seller,
+        purchasePrice,
+        purchaseDate: new Date()
+      });
+
+      existingProduct.quantity += quantity;
+
+      if (customFields && typeof customFields === 'object') {
+        existingProduct.customFields = {
+          ...existingProduct.customFields,
+          ...customFields
+        };
+      }
+
+      const updatedProduct = await existingProduct.save();
+      return res.status(200).json(updatedProduct);
+    }
+
+    // Создаём новый товар
+    const newProduct = new ProductModel({
+      name,
+      category,
+      quantity,
+      customFields,
+      purchases: [
+        {
+          seller,
+          purchasePrice,
+          purchaseDate: new Date()
+        }
+      ]
+    });
+
+    const savedProduct = await newProduct.save();
+    res.status(201).json(savedProduct);
+  } catch (error) {
+    console.error('Ошибка при добавлении товара:', error);
     res.status(500).json({ error: 'Ошибка при добавлении товара' });
   }
 });
 
-// ✏️ Обновить товар
+// 🔹 Обновить товар
 router.put('/:id', async (req, res) => {
   try {
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await ProductModel.findByIdAndUpdate(req.params.id, req.body, {
+      new: true
+    });
+    if (!updated) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
     res.json(updated);
-  } catch (err) {
-    console.error('Ошибка обновления товара:', err);
+  } catch (error) {
+    console.error('Ошибка при обновлении товара:', error);
     res.status(500).json({ error: 'Ошибка при обновлении товара' });
   }
 });
 
-// ❌ Удалить товар
+// 🔹 Удалить товар
 router.delete('/:id', async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
+    const deleted = await ProductModel.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
     res.json({ message: 'Товар удалён' });
-  } catch (err) {
-    console.error('Ошибка удаления товара:', err);
+  } catch (error) {
+    console.error('Ошибка при удалении товара:', error);
     res.status(500).json({ error: 'Ошибка при удалении товара' });
   }
 });

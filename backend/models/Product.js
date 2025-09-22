@@ -6,7 +6,13 @@ const productSchema = new mongoose.Schema({
   quantity: Number,
   purchaseDate: Date,
   purchasePrice: Number,
-  seller: String,
+  purchases: [
+  {
+    seller: { type: String, required: true },
+    purchasePrice: { type: Number, required: true },
+    purchaseDate: { type: Date, default: Date.now }
+  }
+  ],
   customFields: { type: Object, default: {} }  
 });
 

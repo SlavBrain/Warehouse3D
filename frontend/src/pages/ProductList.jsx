@@ -15,20 +15,19 @@ const ProductList = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-  const loadData = async () => {
-    try {
-      console.log('Загрузка данных...');
-      const [productsRes, categoriesRes] = await Promise.all([
-        fetchProducts(),
-        fetchCategories()
-      ]);
-      console.log('Товары:', productsRes);
-      console.log('Категории:', categoriesRes);
-    } catch (err) {
-      console.error('Ошибка при загрузке данных:', err);
-    } finally {
-      setLoading(false);
-    }
+    const loadData = async () => {
+      try {
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetchProducts(),
+          fetchCategories()
+        ]);
+        console.log('Товары:', productsRes);
+        console.log('Категории:', categoriesRes);
+      } catch (err) {
+        console.error('Ошибка при загрузке данных:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
@@ -48,7 +47,7 @@ const ProductList = () => {
     try {
       const res = await axios.get('/categories');
       setCategories(res.data);
-      return res.data;          
+      return res.data;
     } catch (err) {
       console.error('Ошибка загрузки категорий:', err);
     }
@@ -89,32 +88,42 @@ const ProductList = () => {
               <TableCell>Название</TableCell>
               <TableCell>Категория</TableCell>
               <TableCell>Количество</TableCell>
-              <TableCell>Цена закупки</TableCell>
-              <TableCell>Продавец</TableCell>
-              <TableCell>Объединение</TableCell>              
-              <TableCell>Доп. поля</TableCell>              
+              <TableCell>Последний продавец</TableCell>
+              <TableCell>Последняя цена закупки</TableCell>
+              <TableCell>Объединение</TableCell>
+              <TableCell>Доп. поля</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {products.map(product => (
-              <TableRow key={product._id}>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{getCategoryName(product.category)}</TableCell>
-                <TableCell>{product.quantity}</TableCell>
-                <TableCell>{product.purchasePrice.toFixed(2)}</TableCell>
-                <TableCell>{product.seller || '—'}</TableCell>
-                <TableCell>
-                  {isMergeable(product.category)
-                    ? <Chip label="Да" color="success" size="small" />
-                    : <Chip label="Нет" color="default" size="small" />}
-                </TableCell>
-                <TableCell>
-                  {Object.entries(product.customFields || {}).map(([key, value]) => (
-                    <div key={key}><strong>{key}:</strong> {value}</div>
-                  ))}
-                </TableCell>                
-              </TableRow>
-            ))}
+            {products.map(product => {
+              const lastPurchase = Array.isArray(product.purchases)
+                ? product.purchases.at(-1)
+                : null;
+
+              return (
+                <TableRow key={product._id}>
+                  <TableCell>{product.name}</TableCell>
+                  <TableCell>{getCategoryName(product.category)}</TableCell>
+                  <TableCell>{product.quantity}</TableCell>
+                  <TableCell>{lastPurchase?.seller || '—'}</TableCell>
+                  <TableCell>
+                    {typeof lastPurchase?.purchasePrice === 'number'
+                      ? lastPurchase.purchasePrice.toFixed(2)
+                      : '—'}
+                  </TableCell>
+                  <TableCell>
+                    {isMergeable(product.category)
+                      ? <Chip label="Да" color="success" size="small" />
+                      : <Chip label="Нет" color="default" size="small" />}
+                  </TableCell>
+                  <TableCell>
+                    {Object.entries(product.customFields || {}).map(([key, value]) => (
+                      <div key={key}><strong>{key}:</strong> {value}</div>
+                    ))}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
