@@ -9,29 +9,31 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const categories = [
   {
-    name: 'Фурнитура',
+    name: 'Без категории',
+    mergeable: false
+  },
+  {
+    name: 'Филамент',
     mergeable: true,
     fields: [
       { key: 'material', label: 'Материал', type: 'text' },
       { key: 'color', label: 'Цвет', type: 'text' },
-      { key: 'size', label: 'Размер', type: 'text' }
+      { key: 'complexity', label: 'Сложность печати', type: 'number' }
     ]
   },
   {
-    name: 'Электроника',
+    name: '3D принтер',
     mergeable: false,
     fields: [
-      { key: 'voltage', label: 'Напряжение', type: 'number' },
       { key: 'power', label: 'Мощность', type: 'number' },
-      { key: 'warranty', label: 'Гарантия', type: 'text' }
+      { key: 'paybackPeriod', label: 'Время окупаемости', type: 'number' }
     ]
   },
   {
     name: 'Упаковка',
     mergeable: true,
     fields: [
-      { key: 'type', label: 'Тип упаковки', type: 'text' },
-      { key: 'volume', label: 'Объём', type: 'number' }
+      { key: 'type', label: 'Тип упаковки', type: 'text' }
     ]
   }
 ];

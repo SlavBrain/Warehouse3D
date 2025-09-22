@@ -7,13 +7,13 @@ import axios from 'axios';
 
 
 const ProductForm = ({ categories, onSuccess }) => {
-  //alert('Категории в форме:', categories);
 
   const [form, setForm] = useState({
     name: '',
     category: '',
     quantity: 0,
     purchasePrice: 0,
+    seller:'',
     customFields: {}
   });
 
@@ -35,14 +35,16 @@ const ProductForm = ({ categories, onSuccess }) => {
 
   const handleSubmit = async () => {
     try {
-      await axios.post('/api/products', form);
+      alert('Отправка формы:', form);
+      await axios.post('/products', form);
       if (onSuccess) onSuccess();
       setForm({
         name: '',
         category: '',
         quantity: 0,
         purchasePrice: 0,
-        customFields: {}
+        seller: '',
+        customFields: {}        
       });
     } catch (err) {
       console.error('Ошибка добавления товара:', err);
@@ -86,6 +88,13 @@ const ProductForm = ({ categories, onSuccess }) => {
         type="number"
         value={form.purchasePrice}
         onChange={e => handleChange('purchasePrice', Number(e.target.value))}
+        fullWidth
+      />
+
+      <TextField
+        label="Продавец"
+        value={form.seller}
+        onChange={e => handleChange('seller', e.target.value)}
         fullWidth
       />
 

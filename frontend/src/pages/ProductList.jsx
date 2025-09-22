@@ -7,8 +7,6 @@ import {
 } from '@mui/material';
 import ProductForm from './ProductForm';
 
-console.log('ProductList загружен');
-
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -17,7 +15,6 @@ const ProductList = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-  console.log('useEffect сработал');
   const loadData = async () => {
     try {
       console.log('Загрузка данных...');
@@ -51,7 +48,6 @@ const ProductList = () => {
     try {
       const res = await axios.get('/categories');
       setCategories(res.data);
-      alert('Категории :',res.data);  
       return res.data;          
     } catch (err) {
       console.error('Ошибка загрузки категорий:', err);
@@ -94,8 +90,9 @@ const ProductList = () => {
               <TableCell>Категория</TableCell>
               <TableCell>Количество</TableCell>
               <TableCell>Цена закупки</TableCell>
-              <TableCell>Объединение</TableCell>
-              <TableCell>Доп. поля</TableCell>
+              <TableCell>Продавец</TableCell>
+              <TableCell>Объединение</TableCell>              
+              <TableCell>Доп. поля</TableCell>              
             </TableRow>
           </TableHead>
           <TableBody>
@@ -105,6 +102,7 @@ const ProductList = () => {
                 <TableCell>{getCategoryName(product.category)}</TableCell>
                 <TableCell>{product.quantity}</TableCell>
                 <TableCell>{product.purchasePrice.toFixed(2)}</TableCell>
+                <TableCell>{product.seller || '—'}</TableCell>
                 <TableCell>
                   {isMergeable(product.category)
                     ? <Chip label="Да" color="success" size="small" />
@@ -114,7 +112,7 @@ const ProductList = () => {
                   {Object.entries(product.customFields || {}).map(([key, value]) => (
                     <div key={key}><strong>{key}:</strong> {value}</div>
                   ))}
-                </TableCell>
+                </TableCell>                
               </TableRow>
             ))}
           </TableBody>

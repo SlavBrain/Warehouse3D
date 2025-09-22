@@ -34,7 +34,8 @@ router.get('/', async (req, res) => {
 // ➕ Добавить товар с поддержкой customFields и объединения
 router.post('/', async (req, res) => {
   try {
-    const { name, category, quantity, purchasePrice, customFields } = req.body;
+    const { name, category, quantity, purchasePrice, seller, customFields } = req.body;
+    const product = new Product({ name, category, quantity, purchasePrice, seller, customFields });
 
     const categoryDoc = await Category.findById(category);
     if (!categoryDoc) {

@@ -6,8 +6,8 @@ const productSchema = new mongoose.Schema({
   quantity: Number,
   purchaseDate: Date,
   purchasePrice: Number,
-  source: String,
-  customFields: { type: Object, default: {} }
+  seller: String,
+  customFields: { type: Object, default: {} }  
 });
 
 module.exports = mongoose.model('Product', productSchema);
