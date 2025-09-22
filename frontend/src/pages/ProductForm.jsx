@@ -35,7 +35,6 @@ const ProductForm = ({ categories, onSuccess }) => {
 
   const handleSubmit = async () => {
     try {
-      alert('Отправка формы:', form);
       await axios.post('/products', form);
       if (onSuccess) onSuccess();
       setForm({

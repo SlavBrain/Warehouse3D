@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, category, quantity, purchasePrice, seller, customFields } = req.body;
-    const product = new Product({ name, category, quantity, purchasePrice, seller, customFields });
+    const product = new Product({ name, category, quantity, purchasePrice, seller, customFields});
 
     const categoryDoc = await Category.findById(category);
     if (!categoryDoc) {
@@ -58,15 +58,7 @@ router.post('/', async (req, res) => {
       }
     }
 
-    const newProduct = new Product({
-      name,
-      category,
-      quantity,
-      purchasePrice,
-      customFields
-    });
-
-    const saved = await newProduct.save();
+    const saved = await product.save();
     res.status(201).json(saved);
   } catch (err) {
     console.error('Ошибка добавления товара:', err);
