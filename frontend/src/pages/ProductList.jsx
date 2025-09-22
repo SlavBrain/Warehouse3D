@@ -6,6 +6,7 @@ import {
   Snackbar, Alert, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
 import ProductForm from './ProductForm';
+import ProductDetailsDialog from './ProductDetailsDialog';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -13,6 +14,13 @@ const ProductList = () => {
   const [loading, setLoading] = useState(true);
   const [successOpen, setSuccessOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  const handleOpenDetails = (product) => {
+    setSelectedProduct(product);
+    setDetailsOpen(true);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -101,7 +109,7 @@ const ProductList = () => {
                 : null;
 
               return (
-                <TableRow key={product._id}>
+                <TableRow key={product._id} onClick={() => handleOpenDetails(product)} sx={{ cursor: 'pointer' }}>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{getCategoryName(product.category)}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
@@ -127,7 +135,13 @@ const ProductList = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
+      
+      <ProductDetailsDialog
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        product={selectedProduct}
+        categories={categories}
+      />
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Добавить товар</DialogTitle>
         <DialogContent>
